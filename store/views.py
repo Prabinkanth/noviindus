@@ -124,7 +124,8 @@ def logout_user(request):
     return redirect('store')
 
 def register(request):
-    if request.method == 'POST':
+    try :
+     if request.method == 'POST':
         username=request.POST.get('username')
         email=request.POST.get('email')
         password=request.POST.get('password')
@@ -136,5 +137,10 @@ def register(request):
         else:
             messages.error(request,'password not same')
             return redirect('register')
+     else:
 
-    return render(request, 'store/signup.html')
+         return render(request, 'store/signup.html')
+    
+    except:
+         messages.error(request,'username aleady exist')
+         return redirect('register')
