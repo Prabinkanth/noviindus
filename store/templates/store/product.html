@@ -1,0 +1,25 @@
+{% extends 'store/main.html' %}
+{% load static %}
+{% block content %}
+<div class="row">
+    {% for product in add %}
+    <div class="col-lg-4">
+        <img class="thumbnail" src="{{product.imageURL}}">
+        <div class="box-element product">
+            <h6><strong>{{product.name}}</strong></h6>
+            <hr>
+            <h4 style="display: inline-block; float: right"><strong>₹{{product.price| floatformat:2}}</strong></h4>
+            <p class="text-center"><a href="{% url 'updateAddress' pk=product.id %}" type="button" class="btn btn-success w-100">Update</a></p>
+           
+            
+
+        </div>
+        
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock content %}
+
+
+<img src="{% static 'images/download.png' %}">
