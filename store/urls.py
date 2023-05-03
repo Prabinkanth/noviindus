@@ -14,5 +14,5 @@ urlpatterns = [
     path('add-page/',views.adminPage.as_view(),name="admin-page"),
     path('admin-page/', views.myProducts,name='my-products'),
     path('updateproduct/<int:pk>', views.updateProduct.as_view(),name='updateproduct'),
-
+    path('delete-product/<int:pk>', views.product_delete ,name='delete-product'),
 ]
