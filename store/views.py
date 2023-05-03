@@ -3,7 +3,7 @@ from django.contrib.auth import authenticate,login,logout
 
 from django.http import JsonResponse
 from .models import *
-from . utils import cookieCart,cartData,guestOrder
+from . utils import cookieCart,cartData
 import json
 import datetime
 from django.contrib import messages
@@ -14,6 +14,59 @@ from django.views import View
 
 
 # Create your views here.
+
+#login users
+def signup(request):
+    username=request.POST.get('username')
+    password=request.POST.get('password')
+
+    if request.method == 'POST':
+        user = authenticate(username=username,password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('store')
+
+        else:
+            messages.error(request,'Incorrect User-name or password ')
+            return redirect('signup')
+    else :
+
+        return render(request, 'store/login.html')
+#ligout user
+
+def logout_user(request):
+    logout(request)
+
+    return redirect('store')
+
+#register for new users
+
+def register(request):
+    try :
+     if request.method == 'POST':
+        username=request.POST.get('username')
+        email=request.POST.get('email')
+        password=request.POST.get('password')
+        confirm_password=request.POST.get('confirm_password')
+        if password == confirm_password:
+           user=User.objects.create_user(username=username,email=email,password=password,)
+           login(request, user)
+           return redirect('store')
+        else:
+            messages.error(request,'password not same')
+            return redirect('register')
+     else:
+
+         return render(request, 'store/signup.html')
+    
+    except:
+         messages.error(request,'username aleady exist')
+         return redirect('register')
+    
+
+
+
+
 def store(request):
 
     data = cartData(request)
@@ -34,15 +87,7 @@ def cart(request):
     context = {'items':items ,'order':order,'cartItems':cartItems}
     return render(request, 'store/cart.html',context)
 
-def checkout(request):
-    
-    data = cartData(request)
-    cartItems = data['cartItems']
-    items = data['items']
-    order = data['order']
 
-    context = {'items':items ,'order':order,'cartItems':cartItems}
-    return render(request, 'store/checkout.html',context)
 
 
 def upadateItem(request):
@@ -71,83 +116,6 @@ def upadateItem(request):
 
     return JsonResponse('Item was added',safe=False)
 
-def processOrder(request):
-    transaction_id = datetime.datetime.now().timestamp()
-    data = json.loads(request.body)
-
-    if request.user.is_authenticated:  
-        customer = request.user.customer
-        order, created = Order.objects.get_or_create(customer=customer ,complete=False)
-
-    else:
-        customer, order = guestOrder(request, data)
-     
-
-    total = float(data['form']['total'])
-    order.transaction_id = transaction_id
-
-    if total == float(order.get_cart_total):
-        order.complete = True
-    order.save()
-
-    if order.shipping == True:
-        ShippingAddress.objects.create(
-            customer=customer,
-            order=order,
-            address=data['shipping']['address'],
-            city=data['shipping']['city'],
-            state=data['shipping']['state'],
-            zipcode=data['shipping']['zipcode'],
-        )
-
-    return JsonResponse('Payment compleated',safe=False)
-
-def signup(request):
-    username=request.POST.get('username')
-    password=request.POST.get('password')
-
-    if request.method == 'POST':
-        user = authenticate(username=username,password=password)
-        if user is not None:
-            login(request, user)
-            return redirect('store')
-
-        else:
-            messages.error(request,'Incorrect User-name or password ')
-            return redirect('signup')
-    else :
-
-        return render(request, 'store/login.html')
-
-
-def logout_user(request):
-    logout(request)
-
-    return redirect('store')
-
-def register(request):
-    try :
-     if request.method == 'POST':
-        username=request.POST.get('username')
-        email=request.POST.get('email')
-        password=request.POST.get('password')
-        confirm_password=request.POST.get('confirm_password')
-        if password == confirm_password:
-           user=User.objects.create_user(username=username,email=email,password=password,)
-           login(request, user)
-           return redirect('store')
-        else:
-            messages.error(request,'password not same')
-            return redirect('register')
-     else:
-
-         return render(request, 'store/signup.html')
-    
-    except:
-         messages.error(request,'username aleady exist')
-         return redirect('register')
-    
-
 
 class adminPage(View):
     def get(self,request):
@@ -170,14 +138,15 @@ class adminPage(View):
         return render(request, 'store/admin.html', locals())
     
 def myProducts(request):
-    add = Product.objects.all()
+    add = Product.objects.filter(is_delete=False)
     return render(request,'store/product.html',locals())
 
-class updateAdress(View):
+class updateProduct(View):
     def get(self,request,pk):
         add = Product.objects.get(pk=pk)
         form = AddProductForm(instance=add)
-        return render(request,'store/updateAdress.html',locals())
+        return render(request,'store/updateproduct.html',locals())
+    
     def post(self, request,pk):
         form = AddProductForm(request.POST, request.FILES)
         if form.is_valid():
@@ -187,7 +156,19 @@ class updateAdress(View):
             add.image = form.cleaned_data['image']
             add.save()
             
-            messages.success(request, "Congratulations! Profile Saved Successfully")
+            messages.success(request, "Product Saved Successfully")
         else:
             messages.warning(request,"Invalid Input Data")
         return redirect("my-products")
+    
+    def delete(self, request, pk):
+        try:
+            print("gvgvhhbhbhbjbjnjnj")
+            add = Product.objects.get(pk=pk)
+            add.is_delete  = True
+            add.save
+            messages.success(request, "Product Deleted Successfully")
+            return redirect("my-products")
+        except :
+            messages.error(request, "Somethig went wrong")
+            return redirect("updateproduct")

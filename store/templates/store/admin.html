@@ -1,6 +1,7 @@
 {% extends 'store/main.html' %}
 {% load static %}
 {% block content %}
+{% if user.is_authenticated %}
 <div class="container my-5">
     <div class="row">
         <h3>welcome <span class="text-capitalize">{{request.user}}</span></h3>
@@ -27,9 +28,11 @@
     <div class="alert alert-{{msg.tags}}" role="alert">{{msg}}</div>
     {% endfor %}
     {% endif %}
+   
     </form>
     </div>
     </div></div>
+    {% endif %}
 {% endblock content %}
 
 
